@@ -1,38 +1,35 @@
 package gui;
-
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JToolBar;
+import javax.swing.JPanel;
 
 
-public class Toolbar extends JToolBar implements ActionListener {
-	private JButton saveButton;
-	private JButton refreshButton;
+public class Toolbar extends JPanel implements ActionListener {
+	private JButton helloButton;
+	private JButton goodbyeButton;
 	
-	private ToolbarListener textListener;
+	private StringListener textListener;
 	
 	public Toolbar() {
-		setFloatable(true);
+		setBorder(BorderFactory.createEtchedBorder());
 		
-		saveButton = new JButton();
-		saveButton.setIcon(Utils.createIcon("/images/Save16.gif"));
-		saveButton.setToolTipText("Save");
+		helloButton = new JButton("Hello");
+		goodbyeButton = new JButton("Goodbye");
 		
-		refreshButton = new JButton();
-		refreshButton.setIcon(Utils.createIcon("/images/Refresh16.gif"));
-		refreshButton.setToolTipText("Refresh");
+		helloButton.addActionListener(this);
+		goodbyeButton.addActionListener(this);
 		
-		saveButton.addActionListener(this);
-		refreshButton.addActionListener(this);
+		setLayout(new FlowLayout(FlowLayout.LEFT));
 		
-		add(saveButton);
-		addSeparator();
-		add(refreshButton);
+		add(helloButton);
+		add(goodbyeButton);
 	}
 	
-	public void setToolbarListener(ToolbarListener listener) {
+	public void setStringListener(StringListener listener) {
 		this.textListener = listener;
 	}
 
@@ -40,14 +37,14 @@ public class Toolbar extends JToolBar implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		JButton clicked = (JButton)e.getSource();
 		
-		if(clicked == saveButton) {
+		if(clicked == helloButton) {
 			if(textListener != null) {
-				textListener.saveEventOccured();
+				textListener.textEmitted("Hello\n");
 			}
 		}
-		else if(clicked == refreshButton) {
+		else if(clicked == goodbyeButton) {
 			if(textListener != null) {
-				textListener.refreshEventOccured();
+				textListener.textEmitted("Goodbye\n");
 			}
 		}
 		

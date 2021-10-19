@@ -5,10 +5,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.prefs.Preferences;
 
 import javax.swing.JCheckBoxMenuItem;
@@ -18,15 +15,12 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
 
 import controller.Controller;
 
 public class MainFrame extends JFrame {
 
-	private static final long serialVersionUID = 4775907780893361729L;
 	private TextPanel textPanel;
 	private Toolbar toolbar;
 	private FormPanel formPanel;
@@ -35,9 +29,6 @@ public class MainFrame extends JFrame {
 	private TablePanel tablePanel;
 	private PrefsDialog prefsDialog;
 	private Preferences prefs;
-	private JSplitPane splitPane;
-	private JTabbedPane tabPane;
-	private MessagePanel messagePanel;
 	
 	public  MainFrame() {
 		super("Welcome to Java");
@@ -49,15 +40,6 @@ public class MainFrame extends JFrame {
 		formPanel	= new FormPanel();
 		tablePanel = new TablePanel();
 		prefsDialog = new PrefsDialog(this);
-		tabPane = new JTabbedPane();
-		messagePanel = new MessagePanel(this);
-		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
-				formPanel, tabPane);
-		
-		splitPane.setOneTouchExpandable(true);
-		
-		tabPane.addTab("Person Database", tablePanel);
-		tabPane.addTab("Messages", messagePanel);
 		
 		prefs = Preferences.userRoot().node("db");
 
@@ -91,63 +73,29 @@ public class MainFrame extends JFrame {
 
 		setJMenuBar(createMenuBar());
 		
-		toolbar.setToolbarListener(new ToolbarListener() {
-			public void saveEventOccured() {
-				connect();
-				
-				try {
-					controller.save();
-				} catch (SQLException e) {
-					JOptionPane.showMessageDialog(MainFrame.this, "Unable to save to database.", "Database Connection Problem", JOptionPane.ERROR_MESSAGE);
-				}
-			}
-
-			public void refreshEventOccured() {
-				connect();
-				
-				try {
-					controller.load();
-				} catch (SQLException e) {
-					JOptionPane.showMessageDialog(MainFrame.this, "Unable to load from database.", "Database Connection Problem", JOptionPane.ERROR_MESSAGE);
-				}
-				
-				tablePanel.refresh();
+		toolbar.setStringListener(new StringListener() {
+			public void textEmitted(String text) {
+				textPanel.appendText(text);
 			}
 		});
 		
 		formPanel.setFormListener(new FormListener() {
 			public void formEventOccurred(FormEvent e) {
-				String name = e.getName();
-				String occupation = e.getOccupation();
-				String text = e.getText();
-				String empCategory = e.getEmploymentCategory();
-				String gender = e.getGender();
-				
-				textPanel.appendText(name + " : " + occupation + " : " +
-				                     text + " : " + empCategory +  " : " +
-						             gender + "\n");
+				controller.addPerson(e);
+				tablePanel.refresh();
 			}
 		});
 
-		setLayout(new BorderLayout());
-		add(textPanel, 	BorderLayout.CENTER);
-		add(toolbar, 	BorderLayout.NORTH);
 		add(formPanel,	BorderLayout.WEST);
+		add(toolbar, BorderLayout.NORTH);
+		add(tablePanel, BorderLayout.CENTER);
 
-		setMinimumSize(new Dimension(600, 400));
-		setSize(750, 500);
+		setMinimumSize(new Dimension(500, 400));
+		setSize(600, 500);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true);
 	}
 	
-	private void connect() {
-		try {
-			controller.connect();
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(MainFrame.this, "Cannot connect to database.", "Database Connection Problem", JOptionPane.ERROR_MESSAGE);
-		}
-	}
-
 	private JMenuBar createMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
 		
@@ -184,10 +132,6 @@ public class MainFrame extends JFrame {
 		showFormItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ev) {
 				JCheckBoxMenuItem menuItem = (JCheckBoxMenuItem)ev.getSource();
-				
-				if(menuItem.isSelected()) {
-					splitPane.setDividerLocation((int)formPanel.getMinimumSize().getWidth());
-				}
 				
 				formPanel.setVisible(menuItem.isSelected());
 			}
@@ -242,11 +186,7 @@ public class MainFrame extends JFrame {
 						"Confirm Exit", JOptionPane.OK_CANCEL_OPTION);
 				
 				if(action == JOptionPane.OK_OPTION) {
-					WindowListener[] listeners = getWindowListeners();
-					
-					for(WindowListener listener: listeners) {
-						listener.windowClosing(new WindowEvent(MainFrame.this, 0));
-					}
+					System.exit(0);
 				}					
 			}
 		});
